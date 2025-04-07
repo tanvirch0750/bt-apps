@@ -146,6 +146,11 @@ export async function updateSettings(formData: SettingsFormData) {
 
         revalidatePath('/capital');
         revalidatePath('/dashboard');
+
+        revalidatePath('/weekly-plan');
+
+        revalidatePath('/bets');
+        revalidatePath('/bets/new');
       }
     }
 

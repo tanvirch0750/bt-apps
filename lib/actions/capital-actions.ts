@@ -141,7 +141,11 @@ export async function updateCapital(data: {
     await capitalData.save();
 
     revalidatePath('/capital');
+
+    revalidatePath('/weekly-plan');
     revalidatePath('/dashboard');
+    revalidatePath('/bets');
+    revalidatePath('/bets/new');
 
     // Stringify the result to avoid circular references
     return { success: true, data: JSON.parse(JSON.stringify(capitalData)) };
@@ -212,6 +216,8 @@ export async function updateCapitalSettings(data: {
     revalidatePath('/weekly-plan');
     revalidatePath('/monthly-summary');
     revalidatePath('/statistics');
+
+    revalidatePath('/bets/new');
 
     // Stringify the result to avoid circular references
     return { success: true, data: JSON.parse(JSON.stringify(capitalData)) };

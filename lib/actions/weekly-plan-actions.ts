@@ -1,11 +1,16 @@
 'use server';
 
 import connectDB from '@/lib/db';
-import Bet from '@/lib/models/bet';
-import Capital from '@/lib/models/capital';
 import WeeklyPlan from '@/lib/models/weekly-plan';
+import Capital from '@/lib/models/capital';
+import Bet from '@/lib/models/bet';
 import { getCurrentWeekOfMonth } from '@/lib/utils';
 import { revalidatePath } from 'next/cache';
+
+// Disable caching for all server actions
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export type WeeklyPlanFormData = {
   targetBets: number;
@@ -58,8 +63,11 @@ export async function createOrUpdateWeeklyPlan(formData: WeeklyPlanFormData) {
 
     await weeklyPlan.save();
 
+    // Revalidate all paths that might use this data
     revalidatePath('/weekly-plan');
     revalidatePath('/dashboard');
+    revalidatePath('/bets');
+    revalidatePath('/bets/new');
 
     // Stringify the result to avoid circular references
     return { success: true, data: JSON.parse(JSON.stringify(weeklyPlan)) };
@@ -71,17 +79,26 @@ export async function createOrUpdateWeeklyPlan(formData: WeeklyPlanFormData) {
 
 export async function getWeeklyPlan(week?: number) {
   try {
+    console.log('Connecting to database for weekly plan...');
     await connectDB();
+    console.log('Connected to database, fetching capital data...');
 
     // Get current capital data
     const capitalData = await Capital.findOne({});
 
     if (!capitalData) {
+      console.error('Capital data not found');
       return { success: false, error: 'Capital data not found' };
     }
 
+    console.log(
+      'Capital data found, current month/year:',
+      capitalData.currentMonth,
+      capitalData.currentYear
+    );
     const { currentMonth, currentYear } = capitalData;
     const currentWeek = week || getCurrentWeekOfMonth();
+    console.log('Looking for weekly plan for week:', currentWeek);
 
     // Get weekly plan
     let weeklyPlan = await WeeklyPlan.findOne({
@@ -90,8 +107,11 @@ export async function getWeeklyPlan(week?: number) {
       week: currentWeek,
     });
 
+    console.log('Weekly plan found:', !!weeklyPlan);
+
     // If no plan exists, return default values
     if (!weeklyPlan) {
+      console.log('Creating default weekly plan');
       // @ts-ignore
       weeklyPlan = {
         month: currentMonth,
@@ -170,6 +190,13 @@ export async function getWeeklyPlan(week?: number) {
         ),
       },
     };
+
+    console.log('Weekly plan data prepared:', {
+      hasWeeklyPlan: !!weeklyPlan,
+      stakeAmount,
+      // @ts-ignore
+      averageOdds: weeklyPlan.averageOdds,
+    });
 
     // Stringify the result to avoid circular references
     return { success: true, data: JSON.parse(JSON.stringify(weeklyPlanData)) };

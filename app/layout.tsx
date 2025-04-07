@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import type React from 'react';
 import './globals.css';
+import connectDB from '@/lib/db';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -13,11 +14,12 @@ export const metadata: Metadata = {
   description: 'Track and manage your football betting journey',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connectDB();
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>

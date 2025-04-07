@@ -1,3 +1,9 @@
+// Import all models here to ensure they're registered with Mongoose
+import './models/bet';
+import './models/capital';
+import './models/settings';
+import './models/weekly-plan';
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
